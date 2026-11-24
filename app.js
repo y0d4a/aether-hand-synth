@@ -8,12 +8,13 @@
     'fpsLabel','modeMini','stageInstruction','interactionHint','coordinate','currentNote','liveNote','toast',
     'miniKeyboard','preset','root','scale','octave','octaveValue','reverb','delay','cutoff','cutoffValue','space','spaceValue',
     'visualTheme','particles','skeleton','connections','trails','volume','volumeValue','mirrorBtn','fullscreenBtn',
-    'recordBtn','recordText','recIndicator','recordTime','muteBtn','helpBtn','helpDialog','closeHelp','dismissHelp', 'performanceProfile','deviceHint'
+    'recordBtn','recordText','recIndicator','recordTime','muteBtn','helpBtn','helpDialog','closeHelp','dismissHelp', 'performanceProfile','deviceHint',
+    'presetPreview','presetDescription','beatToggle','beatStyle','bpm','bpmValue','beatVolume','beatVolumeValue','drive','driveValue','beatStatus'
   ].map((id) => [id, $(id)]));
 
   const CONFIG = {
     mode: 'harp', preset: 'glass', root: 'C', scale: 'pentatonic', octave: 4,
-    volume: .75, reverb: true, delay: true, cutoff: 8000, space: .35,
+    volume: .75, reverb: true, delay: true, cutoff: 8000, space: .35, drive: .5, beatVolume: .48,
     visual: 'aurora', particles: true, skeleton: true, connections: true, trails: true, mirror: true, performance: 'auto',
   };
   const NOTE_INDEX = {C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, Bb: 10};
@@ -78,7 +79,18 @@
       this.reverbWet = ctx.createGain(); this.reverbWet.gain.value = CONFIG.reverb ? CONFIG.space : 0;
       this.toneFilter.connect(this.convolver); this.convolver.connect(this.reverbWet); this.reverbWet.connect(this.master);
       this.mediaDest = ctx.createMediaStreamDestination();
-      this.master.connect(ctx.destination); this.master.connect(this.mediaDest);
+      this.limiter=ctx.createDynamicsCompressor();
+      this.limiter.threshold.value=-14;
+      this.limiter.knee.value=10;
+      this.limiter.ratio.value=8;
+      this.limiter.attack.value=.003;
+      this.limiter.release.value=.19;
+      this.master.connect(this.limiter);
+      this.limiter.connect(ctx.destination);
+      this.limiter.connect(this.mediaDest);
+      this.groove=new window.AetherGroove.Bank(ctx,this.bus,this.master);
+      this.groove.drumBus.gain.value=CONFIG.beatVolume;
+      this.groove.drive=CONFIG.drive;
       this.thereminGain = ctx.createGain(); this.thereminGain.gain.value = 0;
       this.thereminGain.connect(this.bus);
       this.thereminA = ctx.createOscillator(); this.thereminA.type = 'sine';
@@ -87,6 +99,7 @@
       this.thereminA.connect(this.thereminGain);
       this.thereminB.connect(this.thereminBGain); this.thereminBGain.connect(this.thereminGain);
       this.thereminA.start(); this.thereminB.start();
+      this.updateTimbre();
       this.setEffects();
     }
     makeImpulse(ctx, seconds, decay) {
@@ -108,6 +121,7 @@
     }
     playNote(midi, velocity = .75) {
       if (!this.ctx) return;
+      if (this.groove.playNote(CONFIG.preset,midi,velocity)) return;
       const ctx = this.ctx, now = ctx.currentTime + .004, hz = freqFromMidi(midi);
       const voice = ctx.createGain(); voice.gain.setValueAtTime(.0001, now);
       const v = clamp(velocity, .24, 1);
@@ -128,6 +142,25 @@
         amount.gain.value = level; osc.connect(amount); amount.connect(voice);
         osc.start(now); osc.stop(now + decay + .055);
       }
+    }
+    updateTimbre() {
+      if (!this.ctx) return;
+      const presets={
+        guitarClean:['triangle','sawtooth',.11],
+        guitarDrive:['sawtooth','square',.19],
+        synthLead:['sawtooth','sawtooth',.27],
+        synthPad:['sawtooth','triangle',.29],
+        trancePluck:['sawtooth','square',.21],
+        acid303:['sawtooth','square',.29],
+        technoStab:['sawtooth','square',.22],
+        technoBass:['square','sine',.23],
+        hiphop808:['sine','triangle',.12],
+        lofiKeys:['triangle','sine',.14]
+      };
+      const [a,b,level]=presets[CONFIG.preset]||['sine','triangle',.16];
+      this.thereminA.type=a;
+      this.thereminB.type=b;
+      this.thereminBGain.gain.setTargetAtTime(level,this.ctx.currentTime,.02);
     }
     updateTheremin(active, midi, volume, filterHz = CONFIG.cutoff) {
       if (!this.ctx) return;
@@ -632,7 +665,85 @@
     els.startBtn.addEventListener('click',startCamera);els.powerBtn.addEventListener('click',startCamera);
     els.recordBtn.addEventListener('click',toggleRecording);
     document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
-    els.preset.addEventListener('change',e=>CONFIG.preset=e.target.value);
+    const presetDescriptions={
+      glass:'Crystalline bells with long shimmering decay.',
+      pluck:'Dry, focused analog pluck.',
+      dream:'Airy ambient pad with a slow bloom.',
+      bass:'Warm subby synthesizer bass.',
+      guitarClean:'Bright plucked synth-guitar, clean and expressive.',
+      guitarDrive:'Gritty overdriven synth-guitar lead.',
+      synthLead:'Detuned neon synthwave lead.',
+      synthPad:'Wide, slowly evolving retro-synth pad.',
+      trancePluck:'Bright, pulsing trance pluck.',
+      acid303:'Resonant acid-style 303-inspired squelch.',
+      technoStab:'Aggressive filtered techno stab.',
+      technoBass:'Punchy low-end electronic bass.',
+      hiphop808:'Pitch-dropping 808-style sub bass.',
+      lofiKeys:'Mellow dusty electric keys.'
+    };
+    const suggestedStyles={guitarDrive:'synthwave',guitarClean:'synthwave',synthLead:'synthwave',synthPad:'synthwave',trancePluck:'psytrance',acid303:'psytrance',technoStab:'techno',technoBass:'techno',hiphop808:'hiphop',lofiKeys:'lofi'};
+    const syncBeatUi=()=>{
+      const playing=Boolean(sound.groove?.playing);
+      els.beatToggle.textContent=playing?'■ STOP GROOVE':'▶ START GROOVE';
+      els.beatToggle.setAttribute('aria-pressed',String(playing));
+      els.beatToggle.classList.toggle('running',playing);
+      els.beatStatus.textContent=playing?'● BEAT PLAYING':'○ BEAT STOPPED';
+    };
+    els.preset.addEventListener('change',e=>{
+      CONFIG.preset=e.target.value;
+      els.presetDescription.textContent=presetDescriptions[CONFIG.preset]||'';
+      sound.updateTimbre();
+      document.querySelectorAll('[data-sound]').forEach(b=>b.classList.toggle('active',b.dataset.sound===CONFIG.preset));
+      const style=suggestedStyles[CONFIG.preset];
+      if(style && !sound.groove?.playing) {
+        els.beatStyle.value=style;
+        const tempo=window.AetherGroove.GROOVES[style].bpm;
+        els.bpm.value=tempo;
+        els.bpmValue.textContent=tempo+' BPM';
+      }
+    });
+    document.querySelectorAll('[data-sound]').forEach(button=>button.addEventListener('click',async()=>{
+      els.preset.value=button.dataset.sound;
+      els.preset.dispatchEvent(new Event('change'));
+      try{await sound.ensure();triggerNote(3,graphic.w*.52,graphic.h*.56,.83);}
+      catch(error){toast(error.message||'Sound preview is unavailable.');}
+    }));
+    els.presetPreview.addEventListener('click',async()=>{
+      try{await sound.ensure();triggerNote(3,graphic.w*.52,graphic.h*.56,.86);}
+      catch(error){toast(error.message||'Sound preview is unavailable.');}
+    });
+    els.beatToggle.addEventListener('click',async()=>{
+      try{
+        await sound.ensure();
+        if(sound.groove.playing)sound.groove.stop();
+        else sound.groove.start(els.beatStyle.value,Number(els.bpm.value));
+        syncBeatUi();
+      }catch(error){toast(error.message||'Unable to start the groove.');}
+    });
+    els.beatStyle.addEventListener('change',()=>{
+      const style=els.beatStyle.value;
+      const bpm=window.AetherGroove.GROOVES[style].bpm;
+      els.bpm.value=bpm;
+      els.bpmValue.textContent=bpm+' BPM';
+      if(sound.groove?.playing)sound.groove.start(style,bpm);
+      syncBeatUi();
+    });
+    els.bpm.addEventListener('input',()=>{
+      els.bpmValue.textContent=els.bpm.value+' BPM';
+      sound.groove?.setBpm(Number(els.bpm.value));
+    });
+    els.beatVolume.addEventListener('input',()=>{
+      CONFIG.beatVolume=Number(els.beatVolume.value)/100*.8;
+      els.beatVolumeValue.textContent=els.beatVolume.value+'%';
+      if(sound.groove)sound.groove.drumBus.gain.setTargetAtTime(CONFIG.beatVolume,sound.ctx.currentTime,.025);
+    });
+    els.drive.addEventListener('input',()=>{
+      CONFIG.drive=Number(els.drive.value)/100;
+      els.driveValue.textContent=els.drive.value+'%';
+      if(sound.groove)sound.groove.drive=CONFIG.drive;
+    });
+    els.presetDescription.textContent=presetDescriptions[CONFIG.preset];
+    syncBeatUi();
     els.root.addEventListener('change',e=>{CONFIG.root=e.target.value;renderKeys();invalidateBeams();});
     els.scale.addEventListener('change',e=>{CONFIG.scale=e.target.value;renderKeys();invalidateBeams();});
     els.octave.addEventListener('input',e=>{CONFIG.octave=Number(e.target.value);els.octaveValue.textContent=CONFIG.octave;renderKeys();invalidateBeams();});
@@ -664,6 +775,7 @@
     document.addEventListener('visibilitychange',()=>{
       if(document.hidden){
         sound.stopTheremin();
+        if(sound.groove?.playing){sound.groove.stop();syncBeatUi();}
         if(camera.active||camera.stream||els.powerBtn.disabled){
           stopCamera();
           pausedForPrivacy=true;
