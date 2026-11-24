@@ -8,13 +8,13 @@
     'fpsLabel','modeMini','stageInstruction','interactionHint','coordinate','currentNote','liveNote','toast',
     'miniKeyboard','preset','root','scale','octave','octaveValue','reverb','delay','cutoff','cutoffValue','space','spaceValue',
     'visualTheme','particles','skeleton','connections','trails','volume','volumeValue','mirrorBtn','fullscreenBtn',
-    'recordBtn','recordText','recIndicator','recordTime','muteBtn','helpBtn','helpDialog','closeHelp','dismissHelp', 'performanceProfile'
+    'recordBtn','recordText','recIndicator','recordTime','muteBtn','helpBtn','helpDialog','closeHelp','dismissHelp', 'performanceProfile','deviceHint'
   ].map((id) => [id, $(id)]));
 
   const CONFIG = {
     mode: 'harp', preset: 'glass', root: 'C', scale: 'pentatonic', octave: 4,
     volume: .75, reverb: true, delay: true, cutoff: 8000, space: .35,
-    visual: 'aurora', particles: true, skeleton: true, connections: true, trails: true, mirror: true, performance: 'smooth',
+    visual: 'aurora', particles: true, skeleton: true, connections: true, trails: true, mirror: true, performance: 'auto',
   };
   const NOTE_INDEX = {C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, Bb: 10};
   const NOTE_NAMES = ['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'];
@@ -148,11 +148,39 @@
   // Profiles favor interactivity over the highest image resolution. Tracking FPS
   // and display FPS are measured separately; neither is a promise of device FPS.
   const PROFILES = {
+    mobile:  {width:480, height:640, complexity:0, interval:30, dpr:1, particles:65, glow:0},
+    tablet:  {width:640, height:480, complexity:0, interval:28, dpr:1, particles:85, glow:0},
+    desktop: {width:640, height:480, complexity:0, interval:28, dpr:1, particles:110, glow:0},
     smooth:  {width:640, height:480, complexity:0, interval:28, dpr:1, particles:110, glow:0},
     balanced:{width:960, height:540, complexity:0, interval:33, dpr:1.25, particles:160, glow:3},
     quality: {width:1280,height:720, complexity:1, interval:40, dpr:1.5, particles:210, glow:7}
   };
-  const profile = () => PROFILES[CONFIG.performance];
+  const device = {kind:'desktop', orientation:'landscape'};
+  function updateDeviceMode() {
+    const coarse = window.matchMedia('(any-pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+    const smallScreen = Math.min(screen.width, screen.height) <= 600;
+    const compact = window.innerWidth <= 700;
+    const nextKind = coarse ? (smallScreen || compact ? 'mobile' : 'tablet') : 'desktop';
+    const nextOrientation = window.matchMedia('(orientation: portrait)').matches ? 'portrait' : 'landscape';
+    const changed = device.kind !== nextKind;
+    device.kind = nextKind;
+    device.orientation = nextOrientation;
+    document.body.dataset.device = nextKind;
+    document.body.dataset.orientation = nextOrientation;
+    const captions = {
+      mobile: nextOrientation === 'portrait'
+        ? 'Mobile mode · Front camera · Rotate your phone for a wider stage'
+        : 'Mobile mode · Front camera · Touch-friendly controls',
+      tablet: 'Tablet mode · Touch-friendly controls',
+      desktop: 'Desktop mode · Keyboard and pointer controls'
+    };
+    els.deviceHint.textContent = captions[nextKind];
+    if (changed && camera.active && CONFIG.performance === 'auto') {
+      toast('Device layout updated. Restart the camera to apply the new resolution.', 4500);
+    }
+    resizeCanvas();
+  }
+  const profile = () => PROFILES[CONFIG.performance === 'auto' ? device.kind : CONFIG.performance];
   const sound = new SoundEngine();
   const camera = {active:false, stream:null, hands:null, processing:false, lastProcess:0, fpsCount:0, fpsStart:0, framesPerSecond:0, tracks:[], previous:new Map(), lastTriggered:new Map(), padZones:new Map(), lastSeen:0, renderCount:0, renderFpsStart:0, renderFps:0, videoFrameCallback:false, pendingVideoCallback:0, activeSession:0};
   const canvas = els.visuals, ctx2 = canvas.getContext('2d', {alpha:true});
@@ -651,7 +679,14 @@
     window.addEventListener('pagehide',stopCamera);
     if(window.ResizeObserver)new ResizeObserver(resizeCanvas).observe(els.stage);
     else window.addEventListener('resize',resizeCanvas);
+    let adaptationFrame = 0;
+    const adapt = () => {
+      cancelAnimationFrame(adaptationFrame);
+      adaptationFrame=requestAnimationFrame(updateDeviceMode);
+    };
+    window.addEventListener('resize',adapt,{passive:true});
+    window.addEventListener('orientationchange',adapt,{passive:true});
   }
-  renderKeys();bindUi();setMode('harp');resizeCanvas();requestRender();
+  renderKeys();bindUi();updateDeviceMode();setMode('harp');resizeCanvas();requestRender();
 })();
 
