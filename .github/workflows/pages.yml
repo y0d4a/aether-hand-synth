@@ -6,6 +6,7 @@ on:
     paths:
       - 'index.html'
       - 'app.js'
+      - 'sound-bank.js'
       - 'styles.css'
       - 'offline.js'
       - 'sw.js'
@@ -39,7 +40,7 @@ jobs:
       - name: Assemble static site
         run: |
           mkdir -p _site/vendor
-          cp index.html app.js styles.css offline.js sw.js _site/
+          cp index.html app.js sound-bank.js styles.css offline.js sw.js _site/
           cp -R vendor/mediapipe-hands _site/vendor/
           cp vendor/offline-assets.json _site/vendor/
           test -s _site/vendor/mediapipe-hands/hands.js
