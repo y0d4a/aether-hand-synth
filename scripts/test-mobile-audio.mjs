@@ -80,7 +80,9 @@ const CONFIG={
   cutoff:8000,volume:.75,reverb:true,delay:true,space:.35,
   beatVolume:.48,drive:.5,preset:'glass'
 };
-const context={window,navigator,CONFIG,Math,Float32Array,Promise};
+const context={window,navigator,CONFIG,Math,Float32Array,Promise,
+  freqFromMidi:(m)=>440*Math.pow(2,(m-69)/12),
+  clamp:(value,min,max)=>Math.max(min,Math.min(max,value))};
 vm.runInNewContext(app.slice(start,end)+'\nthis.SoundEngine=SoundEngine;',context);
 const SoundEngine=context.SoundEngine;
 
