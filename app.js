@@ -58,10 +58,23 @@
   class SoundEngine {
     constructor() { this.ctx = null; this.recorder = null; this.chunks = []; this.muted = false; }
     async ensure() {
-      if (this.ctx) { if (this.ctx.state === 'suspended') await this.ctx.resume(); return; }
+      if (this.ctx) {
+        if (this.ctx.state !== 'running') {
+          await this.ctx.resume();
+          if (this.ctx.state !== 'running') throw new Error('Audio is paused by your browser. Tap Preview or a keyboard note to retry.');
+        }
+        return;
+      }
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) throw new Error('Web Audio API is not supported by this browser.');
       const ctx = this.ctx = new AC();
+      // Unlock audio synchronously in the user's tap/click before the first await.
+      // iOS Safari can create a context in the suspended state.
+      const silent = ctx.createBufferSource();
+      silent.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+      silent.connect(ctx.destination);
+      silent.start(0);
+      const audioReady = ctx.state === 'running' ? Promise.resolve() : ctx.resume();
       this.bus = ctx.createGain(); this.bus.gain.value = .8;
       this.toneFilter = ctx.createBiquadFilter(); this.toneFilter.type = 'lowpass';
       this.toneFilter.frequency.value = CONFIG.cutoff; this.toneFilter.Q.value = .6;
@@ -101,6 +114,8 @@
       this.thereminA.start(); this.thereminB.start();
       this.updateTimbre();
       this.setEffects();
+      await audioReady;
+      if (ctx.state !== 'running') throw new Error('Audio is paused by your browser. Tap Preview or a keyboard note to retry.');
     }
     makeImpulse(ctx, seconds, decay) {
       const length = Math.floor(ctx.sampleRate * seconds);
