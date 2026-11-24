@@ -13,6 +13,7 @@ on:
       - 'vendor/**'
       - 'scripts/verify-offline.mjs'
       - 'scripts/test-audio.mjs'
+      - 'scripts/test-mobile-audio.mjs'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -40,6 +41,9 @@ jobs:
 
       - name: Test electronic audio engine
         run: node scripts/test-audio.mjs
+
+      - name: Test mobile AudioContext unlock and recovery
+        run: node scripts/test-mobile-audio.mjs
 
       - name: Assemble static site
         run: |
