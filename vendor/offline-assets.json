@@ -1,0 +1,19 @@
+{
+  "version": "0.4.1675469240",
+  "files": [
+    "vendor/mediapipe-hands/hand_landmark_full.tflite",
+    "vendor/mediapipe-hands/hand_landmark_lite.tflite",
+    "vendor/mediapipe-hands/hands_solution_packed_assets_loader.js",
+    "vendor/mediapipe-hands/hands_solution_packed_assets.data",
+    "vendor/mediapipe-hands/hands_solution_simd_wasm_bin.data",
+    "vendor/mediapipe-hands/hands_solution_simd_wasm_bin.js",
+    "vendor/mediapipe-hands/hands_solution_simd_wasm_bin.wasm",
+    "vendor/mediapipe-hands/hands_solution_wasm_bin.js",
+    "vendor/mediapipe-hands/hands_solution_wasm_bin.wasm",
+    "vendor/mediapipe-hands/hands.binarypb",
+    "vendor/mediapipe-hands/hands.js",
+    "vendor/mediapipe-hands/index.d.ts",
+    "vendor/mediapipe-hands/package.json",
+    "vendor/mediapipe-hands/README.md"
+  ]
+}
