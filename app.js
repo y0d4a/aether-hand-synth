@@ -58,6 +58,11 @@
   class SoundEngine {
     constructor() { this.ctx = null; this.recorder = null; this.chunks = []; this.muted = false; }
     async ensure() {
+      // Playback category keeps instrument audio audible on supporting iOS browsers,
+      // including devices with the Ring/Silent switch enabled.
+      try {
+        if (navigator.audioSession) navigator.audioSession.type = 'playback';
+      } catch { /* Audio Session API is optional. */ }
       if (this.ctx) {
         if (this.ctx.state !== 'running') {
           await this.ctx.resume();
