@@ -481,8 +481,8 @@
 
   async function setupHands() {
     if(camera.hands) return;
-    if(!window.Hands) throw new Error('Hand-tracking library did not load. Check your internet connection and reload.');
-    const detector=new window.Hands({locateFile:(file)=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${file}`});
+    if(!window.Hands) throw new Error('Offline hand-tracking assets are missing. Install the vendored MediaPipe package and reload.');
+    const detector=new window.Hands({locateFile:(file)=>`./vendor/mediapipe-hands/${file}`});
     detector.setOptions({maxNumHands:2,modelComplexity:profile().complexity,minDetectionConfidence:.62,minTrackingConfidence:.54});
     detector.onResults(handleResults);camera.hands=detector;
   }
