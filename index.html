@@ -4,12 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#070914" />
+  <meta name="referrer" content="no-referrer" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; connect-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'" />
   <meta name="description" content="Play music in the air. A webcam-powered interactive laser harp with hand tracking, visual effects and live synthesis." />
   <title>AETHER — Play the air</title>
   <link rel="stylesheet" href="styles.css" />
   <script defer src="vendor/mediapipe-hands/hands.js"></script>
-  
+  <script defer src="app.js"></script>
+  <script defer src="offline.js"></script>
 </head>
 <body data-visual="aurora">
   <div class="orb orb-one"></div><div class="orb orb-two"></div>
@@ -17,7 +19,7 @@
     <header class="topbar">
       <a class="brand" href="#top" aria-label="Aether home"><span class="brand-mark">✳</span><span>AETHER<span class="brand-period">.</span></span></a>
       <div class="header-center"><span class="signal-dot"></span> AN INSTRUMENT MADE OF LIGHT</div>
-      <div class="top-actions"><span class="privacy"><span class="privacy-dot"></span> 100% LOCAL RUNTIME</span><button class="text-btn" id="helpBtn" type="button">HOW TO PLAY <span aria-hidden="true">↗</span></button></div>
+      <div class="top-actions"><span class="privacy"><span class="privacy-dot"></span> ON-DEVICE PROCESSING</span><button class="text-btn" id="helpBtn" type="button">HOW TO PLAY <span aria-hidden="true">↗</span></button></div>
     </header>
 
     <main id="top">
@@ -45,7 +47,7 @@
               <h2>The stage is yours.</h2>
               <p>Enable your camera to turn your hands into music.</p>
               <button id="startBtn" class="primary-btn" type="button"><span>◉</span> START CAMERA <span>↗</span></button>
-              <small>Camera permission required · No video is uploaded</small>
+              <small>Camera permission required · Processing stays in your browser · Camera stops when tab is hidden</small>
             </div>
             <div class="live-note" id="liveNote" hidden><span class="note-caption">NOW PLAYING</span><strong id="currentNote">C4</strong></div>
             <div class="stage-bottom"><span class="stage-instruction" id="stageInstruction">MOVE YOUR FINGERS THROUGH THE BEAMS TO PLAY</span><span class="stage-coord" id="coordinate">X: -- &nbsp; Y: --</span></div>
@@ -97,11 +99,9 @@
           <div class="tip-box"><span class="tip-sparkle">✧</span><strong>PLAY TIP</strong><p>Bright, even lighting helps the camera find your hands. Keep both hands visible, about 40–100 cm away.</p></div>
         </aside>
       </section>
-      <footer><span>✳ AETHER <span class="footer-muted">/ EXPERIMENTAL HAND INSTRUMENT</span></span><span>NO CLOUD REQUESTS &nbsp;·&nbsp; CAMERA + AUDIO ON DEVICE</span></footer>
+      <footer><span>✳ AETHER <span class="footer-muted">/ EXPERIMENTAL HAND INSTRUMENT</span></span><span>NO MEDIA UPLOADS &nbsp;·&nbsp; HAND TRACKING ON DEVICE</span></footer>
     </main>
   </div>
   <dialog id="helpDialog" class="help-dialog"><div class="dialog-head"><span>✳ HOW TO PLAY</span><button id="closeHelp" class="icon-btn" aria-label="Close instructions">×</button></div><h2>Hands on. Music out.</h2><p>Allow camera access, then try one of the three modes:</p><ol><li><strong>Laser Harp:</strong> move either index or middle fingertip sideways across the light beams to trigger notes.</li><li><strong>Air Keys:</strong> lower a fingertip into a glowing key along the bottom of the stage. Lift it out, then tap again.</li><li><strong>Theremin:</strong> pinch your thumb and index finger together to hold a note. Move your right hand horizontally to change pitch, vertically for volume. Your left hand controls the filter.</li></ol><p>You can always play the 8 keyboard buttons or press <kbd>1</kbd>–<kbd>8</kbd>, even without camera access. Record captures generated audio only, not video.</p><button class="primary-btn" id="dismissHelp">LET'S PLAY ↗</button></dialog>
-<script defer src="app.js"></script>
-  <script defer src="offline.js"></script>
 </body>
 </html>
