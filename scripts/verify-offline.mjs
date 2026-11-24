@@ -9,6 +9,9 @@ if (!html.includes('vendor/mediapipe-hands/hands.js') || !js.includes('./vendor/
 if (!html.includes("connect-src 'self'")) throw Error('Missing same-origin connection policy');
 if (!js.includes('audio:false')) throw Error('Camera must not request microphone access');
 if (!js.includes("window.addEventListener('pagehide',stopCamera)")) throw Error('Missing camera cleanup on navigation');
+if (!html.includes('id="deviceHint"') || !html.includes('value="auto" selected')) throw Error('Missing adaptive device UI');
+if (!js.includes("window.matchMedia('(any-pointer: coarse)')") || !js.includes("const profile = () => PROFILES[CONFIG.performance === 'auto' ? device.kind : CONFIG.performance]")) throw Error('Missing auto device detection and performance profile');
+if (!css.includes('@media (max-width:700px)') || !css.includes('orientation:landscape') || !css.includes('touch-action:manipulation')) throw Error('Missing mobile-responsive layout or touch controls');
 for (const file of ['app.js', 'offline.js', 'sw.js']) {
   const check = spawnSync(process.execPath, ['--check', file], {encoding:'utf8'});
   if (check.status !== 0) throw Error(`Invalid JavaScript in ${file}: ${check.stderr}`);
