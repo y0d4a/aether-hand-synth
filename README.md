@@ -17,6 +17,17 @@ AETHER automatically adapts to phones, tablets and computers using viewport size
 
 All detection and camera inference happen in your browser. The selected device mode is not transmitted to a server.
 
+## Mobile audio troubleshooting
+
+AETHER uses Web Audio API and **must be activated by a direct user tap**. Tap **Preview**, an on-screen keyboard note or **Start Groove** to initialize and unlock playback. No microphone permission is needed.
+
+- If the instrument is silent, check your device's **media** volume (not just ringer volume), then tap **Preview** again.
+- On supported iPhones, AETHER requests the `playback` audio session category. This can make its sounds audible with the Ring/Silent switch enabled, but it can interrupt music from other apps. Browsers without this API ignore it.
+- If returning from a background tab or an installed home-screen web app produces silence, reopen the page in the regular browser and tap **Preview**. Some WebKit versions have documented audio-interruption issues.
+- If an older version seems to persist, close the tab, reopen the site, and reload; the service worker uses versioned offline caches.
+
+The mobile regression test `node scripts/test-mobile-audio.mjs` simulates a suspended AudioContext, the first user gesture, and recovery from interrupted audio. It does not replace manual iOS Safari or Android Chrome playback tests.
+
 ## Run offline
 
 When `vendor/mediapipe-hands/` is present (including `.wasm` and `.data` files), disconnect the internet and run:
@@ -37,6 +48,7 @@ The repository includes an automated GitHub Actions workflow that retrieves the 
 bash scripts/vendor-mediapipe.sh
 node scripts/verify-offline.mjs
 node scripts/test-audio.mjs
+node scripts/test-mobile-audio.mjs
 ```
 
 The one-time packaging step requires internet, npm and Node.js. It installs the pinned package **`@mediapipe/hands@0.4.1675469240`** using `--ignore-scripts`, copies its assets into `vendor/`, and generates `vendor/SHA256SUMS.json` and `vendor/offline-assets.json`. No npm installation or external CDN is required when running the packaged application.
