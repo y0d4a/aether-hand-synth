@@ -10,6 +10,7 @@
   <title>AETHER — Play the air</title>
   <link rel="stylesheet" href="styles.css" />
   <script defer src="vendor/mediapipe-hands/hands.js"></script>
+  <script defer src="sound-bank.js"></script>
   <script defer src="app.js"></script>
   <script defer src="offline.js"></script>
 </head>
@@ -74,8 +75,19 @@
           <div class="controls-head"><span class="control-title">SOUND LAB<span class="brand-period">.</span></span><span class="settings-icon">◫</span></div>
           <div class="control-section">
             <div class="section-title"><span>01</span> INSTRUMENT <span class="section-rule"></span></div>
-            <label class="field-label" for="preset">SOUND PRESET</label>
-            <div class="select-wrap"><select id="preset"><option value="glass">Glass / Ethereal</option><option value="pluck">Pluck / Analog</option><option value="dream">Dream / Ambient</option><option value="bass">Sub / Bass</option></select></div>
+            <div class="sound-preset-heading"><label class="field-label" for="preset">SOUND PRESET</label><button id="presetPreview" type="button" class="preview-btn" title="Preview selected instrument without using the camera">♪ PREVIEW</button></div>
+            <div class="select-wrap"><select id="preset">
+              <optgroup label="CLASSIC SYNTH"><option value="glass">Crystal / Glass</option><option value="pluck">Analog / Pluck</option><option value="dream">Ambient / Dream</option><option value="bass">Sub / Bass</option></optgroup>
+              <optgroup label="ELECTRIC GUITAR · SYNTH"><option value="guitarClean">Clean Electric / Pluck</option><option value="guitarDrive">Electric Guitar / Overdrive</option></optgroup>
+              <optgroup label="SYNTHWAVE"><option value="synthLead">Neon / Synthwave Lead</option><option value="synthPad">Retro / Wide Pad</option></optgroup>
+              <optgroup label="PSYTRANCE"><option value="trancePluck">Psy / Hypnotic Pluck</option><option value="acid303">Acid / 303-Style Lead</option></optgroup>
+              <optgroup label="TECHNO"><option value="technoStab">Techno / Rave Stab</option><option value="technoBass">Warehouse / Techno Bass</option></optgroup>
+              <optgroup label="HIP-HOP"><option value="hiphop808">808 / Sub Drop</option><option value="lofiKeys">Lo-Fi / Velvet Keys</option></optgroup>
+            </select></div>
+            <p class="patch-description" id="presetDescription">Crystalline bells with long shimmering decay.</p>
+            <div class="genre-chips" role="group" aria-label="Quick instrument presets">
+              <button type="button" data-sound="guitarDrive">⚡ Guitar</button><button type="button" data-sound="synthLead">✦ Synthwave</button><button type="button" data-sound="acid303">◎ Psy</button><button type="button" data-sound="technoStab">▣ Techno</button><button type="button" data-sound="hiphop808">◉ Hip-Hop</button>
+            </div>
             <div class="dual-field"><div><label class="field-label" for="root">ROOT NOTE</label><div class="select-wrap"><select id="root"><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>A</option><option value="Bb">B♭</option></select></div></div><div><label class="field-label" for="scale">SCALE</label><div class="select-wrap"><select id="scale"><option value="pentatonic">Pentatonic</option><option value="major">Major</option><option value="minor">Minor</option><option value="dorian">Dorian</option><option value="chromatic">Chromatic</option></select></div></div></div>
             <div class="inline-range"><div><label class="field-label" for="octave">OCTAVE</label><strong id="octaveValue">4</strong></div><input type="range" id="octave" min="2" max="6" step="1" value="4" /></div>
           </div>
@@ -86,8 +98,19 @@
             <div class="inline-range effect-range"><div><label class="field-label" for="cutoff">LOW-PASS FILTER</label><strong id="cutoffValue">8.0 kHz</strong></div><input type="range" id="cutoff" min="300" max="12000" step="100" value="8000" /></div>
             <div class="inline-range effect-range"><div><label class="field-label" for="space">SPACE / REVERB MIX</label><strong id="spaceValue">35%</strong></div><input type="range" id="space" min="0" max="80" value="35" /></div>
           </div>
+          <div class="control-section groove-section">
+            <div class="section-title"><span>03</span> GROOVE MACHINE <span class="section-rule"></span></div>
+            <p class="groove-description">Locally synthesized drums. Play melodies over the beat, with or without a camera. Beats are included in audio recordings.</p>
+            <label class="field-label" for="beatStyle">RHYTHM STYLE</label>
+            <div class="select-wrap"><select id="beatStyle"><option value="synthwave">Synthwave · Retro Drive</option><option value="psytrance">Psytrance · Four-on-the-Floor</option><option value="techno">Techno · Warehouse</option><option value="hiphop">Hip-Hop · Boom Bap</option><option value="lofi">Lo-Fi · Chill Groove</option></select></div>
+            <div class="inline-range"><div><label class="field-label" for="bpm">TEMPO</label><strong id="bpmValue">108 BPM</strong></div><input type="range" id="bpm" min="65" max="175" step="1" value="108"/></div>
+            <div class="inline-range"><div><label class="field-label" for="beatVolume">DRUM LEVEL</label><strong id="beatVolumeValue">60%</strong></div><input type="range" id="beatVolume" min="0" max="100" step="5" value="60"/></div>
+            <div class="inline-range"><div><label class="field-label" for="drive">SYNTH DRIVE</label><strong id="driveValue">50%</strong></div><input type="range" id="drive" min="0" max="100" step="5" value="50"/></div>
+            <button type="button" id="beatToggle" class="groove-btn" aria-pressed="false">▶ START GROOVE</button>
+            <p id="beatStatus" class="groove-status" aria-live="polite">○ BEAT STOPPED</p>
+          </div>
           <div class="control-section visual-section">
-            <div class="section-title"><span>03</span> VISUAL ENGINE <span class="section-rule"></span></div>
+            <div class="section-title"><span>04</span> VISUAL ENGINE <span class="section-rule"></span></div>
             <label class="field-label" for="performanceProfile">PERFORMANCE / CAMERA</label>
             <div class="select-wrap"><select id="performanceProfile"><option value="auto" selected>Auto · Optimized for device</option><option value="smooth">Smooth · Fast</option><option value="balanced">Balanced · More detail</option><option value="quality">Quality · Highest detail</option></select></div>
             <p class="performance-hint">Auto adjusts tracking resolution and effects for mobile, tablet, or desktop. Changes to camera resolution take effect after restarting the camera.</p>
@@ -103,6 +126,6 @@
       <footer><span>✳ AETHER <span class="footer-muted">/ EXPERIMENTAL HAND INSTRUMENT</span></span><span>NO MEDIA UPLOADS &nbsp;·&nbsp; HAND TRACKING ON DEVICE</span></footer>
     </main>
   </div>
-  <dialog id="helpDialog" class="help-dialog"><div class="dialog-head"><span>✳ HOW TO PLAY</span><button id="closeHelp" class="icon-btn" aria-label="Close instructions">×</button></div><h2>Hands on. Music out.</h2><p>Allow camera access, then try one of the three modes:</p><ol><li><strong>Laser Harp:</strong> move either index or middle fingertip sideways across the light beams to trigger notes.</li><li><strong>Air Keys:</strong> lower a fingertip into a glowing key along the bottom of the stage. Lift it out, then tap again.</li><li><strong>Theremin:</strong> pinch your thumb and index finger together to hold a note. Move your right hand horizontally to change pitch, vertically for volume. Your left hand controls the filter.</li></ol><p>On a phone, use the large touch controls, swipe horizontally through play modes, and rotate into landscape for more stage space. On a desktop, use keys <kbd>1</kbd>–<kbd>8</kbd> or the on-screen keyboard. Record captures generated audio only, not camera video.</p><button class="primary-btn" id="dismissHelp">LET'S PLAY ↗</button></dialog>
+  <dialog id="helpDialog" class="help-dialog"><div class="dialog-head"><span>✳ HOW TO PLAY</span><button id="closeHelp" class="icon-btn" aria-label="Close instructions">×</button></div><h2>Hands on. Music out.</h2><p>Allow camera access, then try one of the three modes:</p><ol><li><strong>Laser Harp:</strong> move either index or middle fingertip sideways across the light beams to trigger notes.</li><li><strong>Air Keys:</strong> lower a fingertip into a glowing key along the bottom of the stage. Lift it out, then tap again.</li><li><strong>Theremin:</strong> pinch your thumb and index finger together to hold a note. Move your right hand horizontally to change pitch, vertically for volume. Your left hand controls the filter.</li></ol><p>On a phone, use the large touch controls, swipe horizontally through play modes, and rotate into landscape for more stage space. On a desktop, use keys <kbd>1</kbd>–<kbd>8</kbd> or the on-screen keyboard. Recording captures synthesized melodies and any active drum groove, never camera video.</p><button class="primary-btn" id="dismissHelp">LET'S PLAY ↗</button></dialog>
 </body>
 </html>
