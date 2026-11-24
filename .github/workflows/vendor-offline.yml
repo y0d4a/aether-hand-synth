@@ -1,0 +1,31 @@
+name: Vendor MediaPipe (offline runtime)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/vendor-mediapipe.sh'
+      - 'scripts/manifest-offline.mjs'
+      - '.github/workflows/vendor-offline.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  vendor:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Bundle pinned official npm package
+        run: bash scripts/vendor-mediapipe.sh
+      - name: Verify no remote runtime assets
+        run: node scripts/verify-offline.mjs
+      - name: Commit vendored assets
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add vendor/
+          if ! git diff --cached --quiet; then
+            git commit -m 'vendor: bundle pinned MediaPipe Hands for offline use'
+            git push origin HEAD:main
+          fi
