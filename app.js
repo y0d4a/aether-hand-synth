@@ -1,4 +1,4 @@
-/* AETHER — Local camera + MediaPipe Hands + Web Audio. No video/audio uploads. */
+/* AETHER — On-device hand tracking and audio synthesis. */
 (() => {
   'use strict';
 
@@ -211,8 +211,7 @@
     requestRender();
   }
   function drawGlowLine(x1,y1,x2,y2,c,thickness=1.5,light=.8) {
-    // One stroke per segment, instead of two GPU-blurred strokes with repeated
-    // save/restore per bone, which previously saturated the canvas renderer.
+    // Draw each hand segment once to keep the tracking overlay lightweight.
     ctx2.globalCompositeOperation='source-over';
     ctx2.globalAlpha=light;ctx2.strokeStyle=c;ctx2.lineWidth=thickness;
     ctx2.shadowBlur=profile().glow;ctx2.shadowColor=c;
@@ -520,31 +519,40 @@
   }
   async function startCamera(){
     if(camera.active){stopCamera();return;}
+    const session=++camera.activeSession;
     els.powerBtn.disabled=true;els.startBtn.disabled=true;
     setText('cameraStatus','INITIALIZING CAMERA');
     try{
       if(!navigator.mediaDevices?.getUserMedia) throw new Error('Camera requires HTTPS or localhost, and a supported browser.');
       await sound.ensure();
       const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:profile().width},height:{ideal:profile().height},frameRate:{ideal:30,max:30}},audio:false});
+      if(document.hidden || camera.activeSession!==session){
+        stream.getTracks().forEach(track=>track.stop());
+        throw new DOMException('Camera start cancelled.','AbortError');
+      }
       camera.stream=stream;els.camera.srcObject=stream;
       await els.camera.play();
       await setupHands();
-      camera.active=true;camera.activeSession++;camera.fpsStart=performance.now();camera.fpsCount=0;
+      if(document.hidden || camera.activeSession!==session)throw new DOMException('Camera start cancelled.','AbortError');
+      camera.active=true;camera.fpsStart=performance.now();camera.fpsCount=0;
       camera.renderFpsStart=camera.fpsStart;camera.renderFps=0;camera.renderCount=0;camera.lastSeen=performance.now();
       els.stage.classList.add('live');els.statusLight.classList.add('active');
       setText('cameraStatus','CAMERA LIVE');setText('trackingStatus','SEARCHING FOR HANDS');
       els.powerBtn.innerHTML='<span>◉</span> STOP CAMERA';
       requestRender();queueTracking(camera.activeSession);toast('Camera ready. Move both hands into the frame.');
     }catch(error){
-      console.error('Unable to start camera:',error);
+      if(error?.name!=='AbortError')console.error('Unable to start camera:',error);
       if(camera.stream){camera.stream.getTracks().forEach(track=>track.stop());camera.stream=null;}
       els.camera.srcObject=null;
       camera.active=false;
+      els.stage.classList.remove('live');els.statusLight.classList.remove('active');
       setText('cameraStatus','CAMERA OFFLINE');
       setText('trackingStatus','AWAITING INPUT');
-      const reason=error?.name==='NotAllowedError'?'Camera permission was denied. Allow access in your browser settings and retry.':
-        error?.name==='NotFoundError'?'No camera found on this device.':error?.message||'Camera failed to start.';
-      toast(reason,6500);
+      if(error?.name!=='AbortError'){
+        const reason=error?.name==='NotAllowedError'?'Camera permission was denied. Allow access in your browser settings and retry.':
+          error?.name==='NotFoundError'?'No camera found on this device.':error?.message||'Camera failed to start.';
+        toast(reason,6500);
+      }
     }finally{els.powerBtn.disabled=false;els.startBtn.disabled=false;}
   }
   function stopCamera(){
@@ -566,14 +574,18 @@
       const types=['audio/webm;codecs=opus','audio/mp4','audio/webm'];
       const mimeType=types.find(t=>MediaRecorder.isTypeSupported(t));
       sound.chunks=[];
-      sound.recorder=new MediaRecorder(sound.mediaDest.stream,mimeType?{mimeType}:undefined);
-      sound.recorder.ondataavailable=(event)=>{if(event.data.size)sound.chunks.push(event.data);};
-      sound.recorder.onerror=(e)=>toast(`Recording error: ${e.error?.message||'unknown error'}`);
-      sound.recorder.onstop=()=>{
+      const recorder=new MediaRecorder(sound.mediaDest.stream,mimeType?{mimeType}:undefined);
+      sound.recorder=recorder;
+      recorder.ondataavailable=(event)=>{if(event.data.size)sound.chunks.push(event.data);};
+      recorder.onerror=(e)=>toast(`Recording error: ${e.error?.message||'unknown error'}`);
+      recorder.onstop=()=>{
         clearInterval(recordClock);els.recIndicator.hidden=true;els.recordBtn.classList.remove('recording');
         els.recordText.textContent='RECORD AUDIO';
-        if(!sound.chunks.length){toast('No audio was captured.');return;}
-        const blob=new Blob(sound.chunks,{type:sound.recorder.mimeType});
+        const chunks=sound.chunks;
+        sound.chunks=[];
+        if(sound.recorder===recorder)sound.recorder=null;
+        if(!chunks.length){toast('No audio was captured.');return;}
+        const blob=new Blob(chunks,{type:recorder.mimeType});
         const url=URL.createObjectURL(blob),a=document.createElement('a');
         const ext=blob.type.includes('mp4')?'m4a':'webm';
         a.href=url;a.download=`aether-performance-${new Date().toISOString().replace(/[:.]/g,'-')}.${ext}`;
@@ -620,8 +632,23 @@
         try{await sound.ensure();triggerNote(index,graphic.w*(.13+index*.74/7),graphic.h*.55,.84);}catch(err){toast(err.message);}
       }
     });
-    document.addEventListener('visibilitychange',()=>{if(document.hidden){sound.stopTheremin();}else{requestRender();if(camera.active)queueTracking(camera.activeSession);}});
-    window.addEventListener('beforeunload',()=>camera.stream?.getTracks().forEach(t=>t.stop()));
+    let pausedForPrivacy=false;
+    document.addEventListener('visibilitychange',()=>{
+      if(document.hidden){
+        sound.stopTheremin();
+        if(camera.active||camera.stream||els.powerBtn.disabled){
+          stopCamera();
+          pausedForPrivacy=true;
+        }
+      }else{
+        requestRender();
+        if(pausedForPrivacy){
+          pausedForPrivacy=false;
+          toast('Camera stopped when this tab was hidden. Click Start Camera to resume.',5500);
+        }
+      }
+    });
+    window.addEventListener('pagehide',stopCamera);
     if(window.ResizeObserver)new ResizeObserver(resizeCanvas).observe(els.stage);
     else window.addEventListener('resize',resizeCanvas);
   }
