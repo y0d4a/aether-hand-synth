@@ -3,7 +3,13 @@ import {spawnSync} from 'node:child_process';
 const [html, js, sounds, css, sw, offline, manifest] = await Promise.all([
   readFile('index.html','utf8'), readFile('app.js','utf8'), readFile('sound-bank.js','utf8'), readFile('styles.css','utf8'),
   readFile('sw.js','utf8'),readFile('offline.js','utf8'),readFile('vendor/offline-assets.json','utf8')]);
-if (/https?:\/\//.test([html,js,sounds,css,sw,offline].join('\n'))) throw Error('Absolute remote URL detected in runtime');
+const projectUrl = 'https://github.com/y0d4a/aether-hand-synth';
+const projectLink = 'href="' + projectUrl + '"';
+if (html.split(projectLink).length !== 2) throw Error('Missing or duplicate source link');
+const htmlWithoutNavigationLink = html.replace(projectLink,'href="#source"');
+if (/https?:\/\//.test([htmlWithoutNavigationLink,js,sounds,css,sw,offline].join('\n'))) {
+  throw Error('Absolute remote URL detected in runtime assets');
+}
 if (/\@import\s+url/.test(css)) throw Error('Remote CSS import detected');
 if (!html.includes('vendor/mediapipe-hands/hands.js') || !js.includes('./vendor/mediapipe-hands/${file}')) throw Error('MediaPipe is not locally referenced');
 if (!html.includes("connect-src 'self'")) throw Error('Missing same-origin connection policy');
