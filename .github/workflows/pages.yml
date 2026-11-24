@@ -12,6 +12,7 @@ on:
       - 'sw.js'
       - 'vendor/**'
       - 'scripts/verify-offline.mjs'
+      - 'scripts/test-audio.mjs'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -36,6 +37,9 @@ jobs:
 
       - name: Verify self-hosted runtime dependencies
         run: node scripts/verify-offline.mjs
+
+      - name: Test electronic audio engine
+        run: node scripts/test-audio.mjs
 
       - name: Assemble static site
         run: |
