@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#070914" />
+  <meta name="description" content="Play music in the air. A webcam-powered interactive laser harp with hand tracking, visual effects and live synthesis." />
+  <title>AETHER — Play the air</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js" crossorigin="anonymous"></script>
+  
+</head>
+<body data-visual="aurora">
+  <div class="orb orb-one"></div><div class="orb orb-two"></div>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Aether home"><span class="brand-mark">✳</span><span>AETHER<span class="brand-period">.</span></span></a>
+      <div class="header-center"><span class="signal-dot"></span> AN INSTRUMENT MADE OF LIGHT</div>
+      <div class="top-actions"><span class="privacy"><span class="privacy-dot"></span> CAMERA STAYS ON DEVICE</span><button class="text-btn" id="helpBtn" type="button">HOW TO PLAY <span aria-hidden="true">↗</span></button></div>
+    </header>
+
+    <main id="top">
+      <div class="hero">
+        <div class="eyebrow"><span class="eyebrow-line"></span> REAL-TIME HAND TRACKING <span class="tag">BETA 1.1 · FAST</span></div>
+        <h1>Make music.<br /><em>Move nothing but air.</em></h1>
+        <p>Turn your hands into an instrument. Pluck light beams, play invisible keys, and sculpt sound in real time. No controller required.</p>
+      </div>
+
+      <section class="workspace" aria-label="Live instrument">
+        <div class="stage-column">
+          <div class="stage-head">
+            <div class="stage-label"><span class="status-light" id="statusLight"></span> <strong id="cameraStatus">CAMERA OFFLINE</strong><span class="stage-separator">/</span><span id="trackingStatus">AWAITING INPUT</span></div>
+            <div class="stage-head-right"><span id="fpsLabel">–– TRACK / –– FPS</span><button class="icon-btn" id="mirrorBtn" title="Toggle mirror" aria-label="Toggle mirror">⇄</button><button class="icon-btn" id="fullscreenBtn" title="Fullscreen" aria-label="Fullscreen">⛶</button></div>
+          </div>
+          <div class="stage" id="stage">
+            <video id="camera" autoplay playsinline muted aria-label="Live camera preview"></video>
+            <div class="stage-shade"></div>
+            <canvas id="visuals" aria-label="Interactive laser strings and hand tracking overlay"></canvas>
+            <div class="stage-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <div class="stage-grid" aria-hidden="true"></div>
+            <div class="stage-inner-top"><span class="view-label"><span class="tiny-ring"></span> LIVE CANVAS <span id="modeMini">/ LASER HARP</span></span><span class="rec-indicator" id="recIndicator" hidden><span></span> REC <b id="recordTime">00:00</b></span></div>
+            <div class="standby" id="standby">
+              <div class="standby-symbol" aria-hidden="true"><span class="ring a"></span><span class="ring b"></span><span class="ring c"></span><span class="symbol-core">✳</span></div>
+              <h2>The stage is yours.</h2>
+              <p>Enable your camera to turn your hands into music.</p>
+              <button id="startBtn" class="primary-btn" type="button"><span>◉</span> START CAMERA <span>↗</span></button>
+              <small>Camera permission required · No video is uploaded</small>
+            </div>
+            <div class="live-note" id="liveNote" hidden><span class="note-caption">NOW PLAYING</span><strong id="currentNote">C4</strong></div>
+            <div class="stage-bottom"><span class="stage-instruction" id="stageInstruction">MOVE YOUR FINGERS THROUGH THE BEAMS TO PLAY</span><span class="stage-coord" id="coordinate">X: -- &nbsp; Y: --</span></div>
+            <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+          </div>
+          <div class="transport">
+            <div class="transport-left"><button type="button" class="small-solid-btn" id="powerBtn"><span>◉</span> ENABLE CAMERA</button><button type="button" class="record-btn" id="recordBtn"><span class="record-icon"></span><span id="recordText">RECORD AUDIO</span></button><button type="button" class="mute-btn" id="muteBtn" aria-label="Mute sound">♫</button></div>
+            <div class="transport-right"><div class="volume-label">MASTER <strong id="volumeValue">75%</strong></div><input id="volume" aria-label="Master volume" type="range" min="0" max="100" value="75" /></div>
+          </div>
+          <div class="mode-panel">
+            <div class="panel-topline"><span class="panel-heading">01 <span>/</span> PLAY MODE</span><span class="panel-subheading">CHOOSE YOUR INTERACTION</span></div>
+            <div class="mode-grid" role="group" aria-label="Playing modes">
+              <button class="mode-card active" type="button" data-mode="harp" aria-pressed="true"><span class="mode-art harp-art"><i></i><i></i><i></i><i></i><i></i></span><span class="mode-name">LASER HARP <small>↗</small></span><span class="mode-desc">Sweep across light strings</span></button>
+              <button class="mode-card" type="button" data-mode="keys" aria-pressed="false"><span class="mode-art keys-art"><i></i><i></i><i></i><i></i><i></i></span><span class="mode-name">AIR KEYS <small>↗</small></span><span class="mode-desc">Tap the floating key zones</span></button>
+              <button class="mode-card" type="button" data-mode="theremin" aria-pressed="false"><span class="mode-art theremin-art"><i></i><i></i><i></i><i></i></span><span class="mode-name">THEREMIN <small>↗</small></span><span class="mode-desc">Pinch and sculpt a continuous tone</span></button>
+            </div>
+            <p class="interaction-hint" id="interactionHint"><span>✦</span> Move your index fingers left and right across the glowing vertical strings. Each crossing triggers a note.</p>
+          </div>
+          <div class="keyboard-panel"><div class="keyboard-copy"><span class="panel-heading">02 <span>/</span> KEYBOARD</span><p>Try it without a camera — use your <kbd>1</kbd>–<kbd>8</kbd> keys or click a note.</p></div><div class="mini-keyboard" id="miniKeyboard" aria-label="Play notes"></div></div>
+        </div>
+
+        <aside class="control-panel" aria-label="Instrument settings">
+          <div class="controls-head"><span class="control-title">SOUND LAB<span class="brand-period">.</span></span><span class="settings-icon">◫</span></div>
+          <div class="control-section">
+            <div class="section-title"><span>01</span> INSTRUMENT <span class="section-rule"></span></div>
+            <label class="field-label" for="preset">SOUND PRESET</label>
+            <div class="select-wrap"><select id="preset"><option value="glass">Glass / Ethereal</option><option value="pluck">Pluck / Analog</option><option value="dream">Dream / Ambient</option><option value="bass">Sub / Bass</option></select></div>
+            <div class="dual-field"><div><label class="field-label" for="root">ROOT NOTE</label><div class="select-wrap"><select id="root"><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>A</option><option value="Bb">B♭</option></select></div></div><div><label class="field-label" for="scale">SCALE</label><div class="select-wrap"><select id="scale"><option value="pentatonic">Pentatonic</option><option value="major">Major</option><option value="minor">Minor</option><option value="dorian">Dorian</option><option value="chromatic">Chromatic</option></select></div></div></div>
+            <div class="inline-range"><div><label class="field-label" for="octave">OCTAVE</label><strong id="octaveValue">4</strong></div><input type="range" id="octave" min="2" max="6" step="1" value="4" /></div>
+          </div>
+          <div class="control-section">
+            <div class="section-title"><span>02</span> AUDIO EFFECTS <span class="section-rule"></span></div>
+            <div class="effect-line"><div class="effect-text"><span class="effect-icon">≈</span><span><strong>Spatial Reverb</strong><small>Shimmering ambience</small></span></div><label class="switch"><input type="checkbox" id="reverb" checked /><span class="switch-track"></span></label></div>
+            <div class="effect-line"><div class="effect-text"><span class="effect-icon">↝</span><span><strong>Echo / Delay</strong><small>Repeating reflections</small></span></div><label class="switch"><input type="checkbox" id="delay" checked /><span class="switch-track"></span></label></div>
+            <div class="inline-range effect-range"><div><label class="field-label" for="cutoff">LOW-PASS FILTER</label><strong id="cutoffValue">8.0 kHz</strong></div><input type="range" id="cutoff" min="300" max="12000" step="100" value="8000" /></div>
+            <div class="inline-range effect-range"><div><label class="field-label" for="space">SPACE / REVERB MIX</label><strong id="spaceValue">35%</strong></div><input type="range" id="space" min="0" max="80" value="35" /></div>
+          </div>
+          <div class="control-section visual-section">
+            <div class="section-title"><span>03</span> VISUAL ENGINE <span class="section-rule"></span></div>
+            <label class="field-label" for="performanceProfile">PERFORMANCE / CAMERA</label>
+            <div class="select-wrap"><select id="performanceProfile"><option value="smooth" selected>Smooth · Fast (recommended)</option><option value="balanced">Balanced · More detail</option><option value="quality">Quality · Slower devices may lag</option></select></div>
+            <p class="performance-hint">Smooth uses 640×480, lightweight hand tracking and cheaper visuals. Changing camera resolution takes effect after restarting the camera.</p>
+            <label class="field-label" for="visualTheme">COLOR ATMOSPHERE</label><div class="select-wrap"><select id="visualTheme"><option value="aurora">Aurora / Electric</option><option value="ember">Ember / Solar</option><option value="ice">Ice / Crystal</option><option value="mono">Monochrome / Ghost</option></select></div>
+            <div class="effect-line compact"><div class="effect-text"><span class="effect-icon">✧</span><span><strong>Particle trails</strong></span></div><label class="switch"><input type="checkbox" id="particles" checked /><span class="switch-track"></span></label></div>
+            <div class="effect-line compact"><div class="effect-text"><span class="effect-icon">◇</span><span><strong>Hand skeleton</strong></span></div><label class="switch"><input type="checkbox" id="skeleton" checked /><span class="switch-track"></span></label></div>
+            <div class="effect-line compact"><div class="effect-text"><span class="effect-icon">✺</span><span><strong>Light connections</strong></span></div><label class="switch"><input type="checkbox" id="connections" checked /><span class="switch-track"></span></label></div>
+            <div class="effect-line compact"><div class="effect-text"><span class="effect-icon">◷</span><span><strong>Motion trails</strong></span></div><label class="switch"><input type="checkbox" id="trails" checked /><span class="switch-track"></span></label></div>
+          </div>
+          <div class="tip-box"><span class="tip-sparkle">✧</span><strong>PLAY TIP</strong><p>Bright, even lighting helps the camera find your hands. Keep both hands visible, about 40–100 cm away.</p></div>
+        </aside>
+      </section>
+      <footer><span>✳ AETHER <span class="footer-muted">/ EXPERIMENTAL HAND INSTRUMENT</span></span><span>CAMERA PROCESSED IN YOUR BROWSER &nbsp;·&nbsp; AUDIO GENERATED LOCALLY</span></footer>
+    </main>
+  </div>
+  <dialog id="helpDialog" class="help-dialog"><div class="dialog-head"><span>✳ HOW TO PLAY</span><button id="closeHelp" class="icon-btn" aria-label="Close instructions">×</button></div><h2>Hands on. Music out.</h2><p>Allow camera access, then try one of the three modes:</p><ol><li><strong>Laser Harp:</strong> move either index or middle fingertip sideways across the light beams to trigger notes.</li><li><strong>Air Keys:</strong> lower a fingertip into a glowing key along the bottom of the stage. Lift it out, then tap again.</li><li><strong>Theremin:</strong> pinch your thumb and index finger together to hold a note. Move your right hand horizontally to change pitch, vertically for volume. Your left hand controls the filter.</li></ol><p>You can always play the 8 keyboard buttons or press <kbd>1</kbd>–<kbd>8</kbd>, even without camera access. Record captures generated audio only, not video.</p><button class="primary-btn" id="dismissHelp">LET'S PLAY ↗</button></dialog>
+<script defer src="app.js"></script>
+</body>
+</html>
