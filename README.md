@@ -36,6 +36,7 @@ The repository includes an automated GitHub Actions workflow that retrieves the 
 ```bash
 bash scripts/vendor-mediapipe.sh
 node scripts/verify-offline.mjs
+node scripts/test-audio.mjs
 ```
 
 The one-time packaging step requires internet, npm and Node.js. It installs the pinned package **`@mediapipe/hands@0.4.1675469240`** using `--ignore-scripts`, copies its assets into `vendor/`, and generates `vendor/SHA256SUMS.json` and `vendor/offline-assets.json`. No npm installation or external CDN is required when running the packaged application.
@@ -46,10 +47,27 @@ The one-time packaging step requires internet, npm and Node.js. It installs the 
 - **Air Keys:** tap the virtual keyboard area.
 - **Theremin:** pinch to sustain, move horizontally for pitch and vertically for volume.
 - **1–8 keyboard keys:** play without camera access.
-- Synth presets: Glass, Pluck, Dream, Bass, plus root/scale/octave.
+- **14 sound presets:** four classic synths plus ten new electronic sounds (synth-guitar, synthwave, psytrance, techno and hip-hop), with key, scale, octave, filter, reverb, delay and drive controls.
 - Reverb, delay, filter, visual particles, trails and color palettes.
-- **Smooth** default profile at 640×480; Balanced and Quality are available.
-- **RECORD AUDIO** records only synthesized audio for local download, never webcam video.
+- **Auto** performance profile adapts to mobile, tablet and desktop. Smooth, Balanced and Quality can be selected manually.
+- **RECORD AUDIO** captures synthesized notes and any running drum groove locally, never webcam video.
+
+## Sound design and groove machine
+
+The sound palette is separate from the three hand-control modes: any instrument can be played with Laser Harp, Air Keys or Theremin. The quick genre buttons preview a sound immediately without activating the camera.
+
+| Sound family | Presets | Character |
+| --- | --- | --- |
+| Classic | Crystal, Pluck, Dream, Sub | Light, ambient and simple tones |
+| Electric guitar (synthetic) | Clean Electric, Overdrive | Plucked timbres and waveshaper distortion |
+| Synthwave | Neon Lead, Retro Pad | Detuned oscillators, wide pads |
+| Psytrance | Hypnotic Pluck, Acid 303 | Resonant filter sweeps, short staccato notes |
+| Techno | Rave Stab, Techno Bass | Filtered stabs and punchy bass |
+| Hip-hop | 808 Sub Drop, Lo-Fi Keys | Pitch-bent sub bass and warm dusty keys |
+
+The **Groove Machine** offers Synthwave, Psytrance, Techno, Hip-Hop and Lo-Fi patterns. You can set the BPM (65–175), adjust drum volume and change synth drive. Press **Start Groove** to enable a locally synthesized kick/snare/hi-hat backing; no audio files or licensed samples are downloaded. The rhythm is audible and captured when you record a performance. Background-tab playback automatically stops.
+
+The electric-guitar sounds are deliberately labeled *synth-guitar*: they approximate plucked/overdriven electric tones using synthesis rather than genuine guitar samples or physical instrument modeling. The groove patterns are original elementary rhythm sequences, not reconstructions of copyrighted songs.
 
 ## Privacy and security
 
