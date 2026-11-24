@@ -1,5 +1,5 @@
 /* AETHER cache-first PWA. All paths and requests are strictly same-origin. */
-const CACHE = 'aether-local-v1.2';
+const CACHE = 'aether-local-v1.3';
 const CORE = ['./', './index.html', './app.js', './styles.css', './offline.js'];
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
@@ -24,5 +24,20 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+  if (request.mode === 'navigate') {
+    event.respondWith((async () => {
+      try {
+        const response = await fetch(request);
+        if (response.ok) {
+          const cache = await caches.open(CACHE);
+          await cache.put('./index.html', response.clone());
+        }
+        return response;
+      } catch {
+        return (await caches.match(request)) || (await caches.match('./index.html')) || Response.error();
+      }
+    })());
+    return;
+  }
   event.respondWith((async () => (await caches.match(request)) || fetch(request))());
 });
