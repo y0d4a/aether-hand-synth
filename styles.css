@@ -129,3 +129,26 @@ button,.mini-key,.mode-card,.switch,select{touch-action:manipulation}
   .mode-card,.mini-key,.stage video,.switch-track{transition:none!important}
   .orb{display:none}
 }
+
+
+/* Sound palette and rhythm machine */
+.sound-preset-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.sound-preset-heading .field-label{margin-bottom:0}
+.preview-btn{background:rgba(var(--accent-rgb),.1);border:1px solid rgba(var(--accent-rgb),.42);color:var(--accent);font-size:10px;letter-spacing:.08em;font-weight:800;padding:8px 12px;border-radius:7px;min-height:34px}
+.preview-btn:hover,.genre-chips button:hover{border-color:var(--accent);background:rgba(var(--accent-rgb),.19)}
+.patch-description,.groove-description{font-size:11px;line-height:1.55;color:#9a9fb3;margin:9px 0 13px}
+.genre-chips{display:flex;flex-wrap:wrap;gap:6px;margin:11px 0 8px}
+.genre-chips button{border:1px solid #3a3954;background:#15182b;color:#c5c7db;border-radius:7px;padding:7px 9px;font-size:10px;font-weight:700;transition:border-color .14s,background .14s}
+.genre-chips button.active{border-color:var(--accent);background:rgba(var(--accent-rgb),.16);color:#f1ecff}
+.groove-section .inline-range{margin-top:16px}
+.groove-section .groove-description{margin-top:0}
+.groove-btn{width:100%;margin-top:18px;border:1px solid rgba(var(--accent-rgb),.54);background:linear-gradient(120deg,rgba(var(--accent-rgb),.28),rgba(var(--cyan-rgb),.12));color:#f5f1ff;min-height:45px;border-radius:8px;font-weight:850;font-size:11px;letter-spacing:.11em;transition:transform .15s,background .15s}
+.groove-btn:hover{background:rgba(var(--accent-rgb),.31)}
+.groove-btn:active{transform:scale(.985)}
+.groove-btn.running{border-color:#5ce8cb;color:#6cebd5;background:rgba(22,110,100,.21)}
+.groove-status{font-size:10px;letter-spacing:.12em;font-weight:750;color:#888ea7;text-align:center;margin:12px 0 0}
+.groove-btn.running + .groove-status{color:#71e1c8}
+select optgroup{background:#15182a;color:#a9a9c5;font-weight:700}
+select option{background:#15182a;color:#f1f0fa}
+@media(max-width:900px){.sound-preset-heading{gap:12px}.genre-chips button{min-height:36px}.groove-btn{min-height:50px}}
+@media(max-width:640px){.genre-chips{gap:7px}.genre-chips button{font-size:11px;padding:10px 12px}.preview-btn{min-height:40px}.groove-section .inline-range{margin-top:19px}}
