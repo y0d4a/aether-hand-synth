@@ -1,13 +1,10 @@
-# AETHER — Fully Offline Hand Synth
+# AETHER — Offline-capable Hand Synth
 
 ## Live demo
 
 **[Launch AETHER — Interactive Hand Synth](https://y0d4a.github.io/aether-hand-synth/)**
 
-Play directly in your browser using your webcam. Allow camera access when prompted. HTTPS is enabled through GitHub Pages; hand tracking and audio generation run locally in your browser.
-
-
-A browser-based laser harp, air keyboard and theremin powered by webcam hand tracking. **All camera processing, sound generation, effects and recording run locally.** No external JavaScript, Google Fonts, analytics, cloud inference or runtime CDNs.
+Play directly in your browser using your webcam. Allow camera access when prompted. AETHER performs hand tracking and audio synthesis locally, with no cloud inference or analytics. GitHub Pages serves the static site; the application itself does not upload webcam frames or recorded audio.
 
 ## Run offline
 
@@ -19,7 +16,7 @@ python3 -m http.server 8080 --bind 127.0.0.1
 
 Open **http://localhost:8080** in a browser and allow camera access. Localhost is a secure context. Do not use `file://` because the model assets are fetched locally by the WebAssembly loader. Once vendored, neither the browser nor the local HTTP server requires the internet.
 
-For deployment to an HTTPS host (e.g., GitHub Pages), install the app on a first online visit to cache all same-origin files with its service worker. Browsers can evict caches, so **local hosting of the complete directory remains the reliable, guaranteed offline method**.
+For GitHub Pages, the first visit requires internet access. A service worker caches the application assets for subsequent offline visits when the browser allows it. Browser caches can be evicted; for dependable offline use, run the complete downloaded directory on localhost.
 
 ## Vendoring the models (one-time preparation)
 
@@ -30,7 +27,7 @@ bash scripts/vendor-mediapipe.sh
 node scripts/verify-offline.mjs
 ```
 
-The one-time packaging step needs internet, npm and Node.js. It installs **`@mediapipe/hands@0.4.1675469240`** from npm using `--ignore-scripts`, copies the installed package into the repository, and produces `vendor/SHA256SUMS.json` and `vendor/offline-assets.json`. After packaging, runtime is self-contained. Check the GitHub Actions workflow result and the generated files; do not assume that merely changing the HTML to local paths guarantees offline support.
+The one-time packaging step requires internet, npm and Node.js. It installs the pinned package **`@mediapipe/hands@0.4.1675469240`** using `--ignore-scripts`, copies its assets into `vendor/`, and generates `vendor/SHA256SUMS.json` and `vendor/offline-assets.json`. No npm installation or external CDN is required when running the packaged application.
 
 ## Play
 
@@ -45,13 +42,14 @@ The one-time packaging step needs internet, npm and Node.js. It installs **`@med
 
 ## Privacy and security
 
-- Camera access is requested only after a user gesture, with `audio: false`.
-- JavaScript, WebAssembly binaries and models are loaded **from this application's origin**.
-- Content Security Policy allows only same-origin connections (`connect-src 'self'`) and scripts, with limited WebAssembly compilation.
-- No external fonts, telemetry or cloud API endpoints are referenced in runtime files.
-- A same-origin service worker caches offline resources listed in the build manifest.
-- A compromised website origin, browser, extension or packaging dependency can still threaten privacy. Bundling models does not eliminate these threats.
-- If hosted publicly, the web host can observe standard HTTP asset requests but the application does **not** transmit camera frames or synthesized audio.
+- Camera access requires a click and requests **video only** (`audio: false`). Microphone access is not requested.
+- The camera stream stops when you select **Stop Camera**, switch to another browser tab, or leave the page. Returning to the tab requires manually starting the camera again.
+- Hand tracking uses local MediaPipe JavaScript/WASM/models. Web Audio generates sound in the browser; **Record Audio** saves the synthesized signal locally, not webcam video.
+- The application does not contain telemetry, analytics, cloud inference or media-upload code. Static runtime dependencies are served from the application's origin.
+- CSP restricts script and connection destinations to the same origin. It is defense-in-depth, not a guarantee against a compromised origin or browser extension.
+- When hosted on GitHub Pages, GitHub receives ordinary web requests to deliver app files (including standard network metadata such as IP addresses). Media is not submitted by AETHER's application code.
+- **Camera permissions are scoped to the browser origin.** Other GitHub Pages projects under the same `y0d4a.github.io` origin can share permission scope. For stronger isolation, use a dedicated domain for this application.
+- The service worker caches local assets for offline use. Browser cache removal may require re-downloading them.
 
 ## Verification
 
@@ -59,8 +57,8 @@ The one-time packaging step needs internet, npm and Node.js. It installs **`@med
 node scripts/verify-offline.mjs
 ```
 
-Test in a browser with network disabled and all assets present. Check DevTools Network for off-origin requests while enabling the camera, playing and recording. This static verification does not replace a live network audit or a webcam tracking/performance test on a real device.
+Test with the network disconnected after preparing all assets. Check DevTools Network while enabling the camera, playing, and recording to detect unexpected requests. Static checks cannot establish real-world camera performance or independently audit browser and third-party library behavior.
 
 ## License
 
-AETHER project-specific code is available in this repository. Vendored MediaPipe files are published under the upstream Apache-2.0 terms, and their original package documentation/license files are retained in `vendor/mediapipe-hands/`.
+The vendored `@mediapipe/hands` package declares **Apache-2.0** in its `package.json`; upstream copyright and package metadata are preserved. The AETHER-specific source files do not currently declare a separate open-source license.
