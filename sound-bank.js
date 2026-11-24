@@ -36,6 +36,7 @@
       this.noise=this.makeNoiseBuffer();
       this.shapes=new Map();
       this.voices=[];
+      this.drive=.5;
       this.playing=false;
       this.style='synthwave';
       this.bpm=108;
@@ -77,7 +78,7 @@
       let output=filter;
       if(patch.drive) {
         const shaper=ctx.createWaveShaper();
-        shaper.curve=this.shape(patch.drive);
+        shaper.curve=this.shape(patch.drive*(.35+this.drive*1.3));
         shaper.oversample='none'; // Keep CPU use predictable during camera tracking.
         const trim=ctx.createGain();
         trim.gain.value=.42;
