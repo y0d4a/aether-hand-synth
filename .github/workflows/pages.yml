@@ -1,0 +1,58 @@
+name: Publish AETHER to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'app.js'
+      - 'styles.css'
+      - 'offline.js'
+      - 'sw.js'
+      - 'vendor/**'
+      - 'scripts/verify-offline.mjs'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Verify self-hosted runtime dependencies
+        run: node scripts/verify-offline.mjs
+
+      - name: Assemble static site
+        run: |
+          mkdir -p _site/vendor
+          cp index.html app.js styles.css offline.js sw.js _site/
+          cp -R vendor/mediapipe-hands _site/vendor/
+          cp vendor/offline-assets.json _site/vendor/
+          test -s _site/vendor/mediapipe-hands/hands.js
+          test -s _site/vendor/mediapipe-hands/hands_solution_packed_assets.data
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload static site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+      - name: Publish
+        id: deployment
+        uses: actions/deploy-pages@v4
