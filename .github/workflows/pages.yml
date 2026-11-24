@@ -53,6 +53,9 @@ jobs:
         with:
           path: _site
 
+      - name: Allow artifact metadata to become available
+        run: sleep 20
+
       - name: Publish
         id: deployment
         uses: actions/deploy-pages@v4
