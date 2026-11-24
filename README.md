@@ -1,5 +1,12 @@
 # AETHER — Fully Offline Hand Synth
 
+## Live demo
+
+**[Launch AETHER — Interactive Hand Synth](https://y0d4a.github.io/aether-hand-synth/)**
+
+Play directly in your browser using your webcam. Allow camera access when prompted. HTTPS is enabled through GitHub Pages; hand tracking and audio generation run locally in your browser.
+
+
 A browser-based laser harp, air keyboard and theremin powered by webcam hand tracking. **All camera processing, sound generation, effects and recording run locally.** No external JavaScript, Google Fonts, analytics, cloud inference or runtime CDNs.
 
 ## Run offline
