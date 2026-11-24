@@ -1,5 +1,5 @@
 /* AETHER cache-first PWA. All paths and requests are strictly same-origin. */
-const CACHE = 'aether-local-v1.5';
+const CACHE = 'aether-local-v1.6';
 const CORE = ['./', './index.html', './app.js', './sound-bank.js', './styles.css', './offline.js'];
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
