@@ -6,6 +6,17 @@
 
 Play directly in your browser using your webcam. Allow camera access when prompted. AETHER performs hand tracking and audio synthesis locally, with no cloud inference or analytics. GitHub Pages serves the static site; the application itself does not upload webcam frames or recorded audio.
 
+## Mobile, tablet and desktop
+
+AETHER automatically adapts to phones, tablets and computers using viewport size and available touch/pointer capabilities (not invasive device fingerprinting). The default **Auto** performance profile uses a lightweight model and lower camera/render resolution on phones; other performance profiles can be selected manually.
+
+- **Phones:** Portrait-optimized camera stage, swipeable playing-mode cards, large touch controls, and a compact keyboard. Rotate to landscape for a wider stage.
+- **Tablets:** Touch targets and a larger responsive layout.
+- **Desktop/laptop:** Full-width stage, multi-column settings and keyboard shortcuts `1`–`8`.
+- **All devices:** Camera permission is required and front-facing video is requested. HTTPS or localhost is required for webcam access. Real-world tracking FPS varies by device, browser and lighting.
+
+All detection and camera inference happen in your browser. The selected device mode is not transmitted to a server.
+
 ## Run offline
 
 When `vendor/mediapipe-hands/` is present (including `.wasm` and `.data` files), disconnect the internet and run:
